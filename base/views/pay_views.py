@@ -4,11 +4,13 @@ from django.conf import settings
 from stripe.api_resources import tax_rate
 from base.models import Item
 import stripe
- 
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+# stripeのAPIキー
 stripe.api_key = settings.STRIPE_API_SECRET_KEY
  
 #  支払い完了画面
-class PaySuccessView(TemplateView):
+class PaySuccessView(LoginRequiredMixin, TemplateView):
     template_name = 'pages/success.html'
  
     def get(self, request, *args, **kwargs):
@@ -20,7 +22,7 @@ class PaySuccessView(TemplateView):
         return super().get(request, *args, **kwargs)
  
 # 支払い失敗画面
-class PayCancelView(TemplateView):
+class PayCancelView(LoginRequiredMixin, TemplateView):
     template_name = 'pages/cancel.html'
  
     def get(self, request, *args, **kwargs):
@@ -54,10 +56,28 @@ def create_line_item(unit_amount, name, quantity):
         'tax_rates': [tax_rate.id]
     }
  
+# プロフィールの情報が欠如していないかチェックする関数
+def check_profile_filled(profile):
+    if profile.name is None or profile.name == '':
+        return False
+    elif profile.zipcode is None or profile.zipcode == '':
+        return False
+    elif profile.prefecture is None or profile.prefecture == '':
+        return False
+    elif profile.city is None or profile.city == '':
+        return False
+    elif profile.address1 is None or profile.address1 == '':
+        return False
+    return True
+
 # 支払い処理
-class PayWithStripe(View):
+class PayWithStripe(LoginRequiredMixin, View):
  
     def post(self, request, *args, **kwargs):
+        # プロフィールが埋まっているかどうか確認
+        if not check_profile_filled(request.user.profile):
+            return redirect('/profile/')
+        
         cart = request.session.get('cart', None)
         if cart is None or len(cart) == 0:
             return redirect('/')

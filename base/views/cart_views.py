@@ -3,9 +3,12 @@ from django.conf import settings
 from django.views.generic import View, ListView
 from base.models import Item
 from collections import OrderedDict
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
+
 
 # カートの中
-class CartListView(ListView):
+class CartListView(LoginRequiredMixin, ListView):
     model = Item
     template_name = 'pages/cart.html'
  
@@ -40,7 +43,7 @@ class CartListView(ListView):
         return context
     
 # カートへの追加処理
-class AddCartView(View):
+class AddCartView(LoginRequiredMixin, View):
  
     # # getメソッドではトップへリダイレクトする場合はこのようにかけます。
     # def get(self, request):
@@ -61,6 +64,7 @@ class AddCartView(View):
         return redirect('/cart/')
 
 # カートから削除する処理
+@login_required
 def remove_from_cart(request, pk):
     cart = request.session.get('cart', None)
     if cart is not None:

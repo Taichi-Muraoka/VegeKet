@@ -17,16 +17,43 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from base import views
+from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
-    # 管理画面
-    path('admin/', admin.site.urls),
-
     # トップページ
     path('', views.IndexListView.as_view()),
 
+    # 管理画面
+    path('admin/', admin.site.urls),
+
+
+    # --------------------
+    # アカウント関連ルート
+    # --------------------
+
+    # ログイン
+    path('login/', views.Login.as_view()),
+
+    # ログアウト
+    path('logout/', LogoutView.as_view()),
+
+    # サインアップ
+    path('signup/', views.SignUpView.as_view()),
+
+    # アカウント情報
+    path('account/', views.AccountUpdateView.as_view()),
+
+    # プロフィール編集
+    path('profile/', views.ProfileUpdateView.as_view()),
+
+
+    # --------------------
+    # アイテム関連ルート
+    # --------------------
+
     # アイテム個別の詳細ページ
     path('items/<str:pk>/', views.ItemDetailView.as_view()),
+
 
     # --------------------
     # カート関連ルート
@@ -40,6 +67,7 @@ urlpatterns = [
 
     # カートから削除
     path('cart/remove/<str:pk>/', views.remove_from_cart),
+
 
     # --------------------
     # 支払い関連ルート
