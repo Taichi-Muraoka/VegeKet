@@ -64,6 +64,12 @@ urlpatterns = [
     # アイテム個別の詳細ページ
     path('items/<str:pk>/', views.ItemDetailView.as_view()),
 
+    # カテゴリリスト
+    path('categories/<str:pk>/', views.CategoryListView.as_view()),
+
+    # タグリスト
+    path('tags/<str:pk>/', views.TagListView.as_view()),
+
 
     # --------------------
     # カート関連ルート
