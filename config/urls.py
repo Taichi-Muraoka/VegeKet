@@ -46,6 +46,16 @@ urlpatterns = [
     # プロフィール編集
     path('profile/', views.ProfileUpdateView.as_view()),
 
+    # --------------------
+    # 注文履歴関連ルート
+    # --------------------
+
+    # 注文履歴一覧
+    path('orders/<str:pk>/', views.OrderDetailView.as_view()),
+
+    # 注文履歴個別
+    path('orders/', views.OrderIndexView.as_view()),
+
 
     # --------------------
     # アイテム関連ルート
