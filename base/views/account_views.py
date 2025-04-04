@@ -1,10 +1,11 @@
-from django.views.generic import CreateView, UpdateView
+from django.views.generic import CreateView, UpdateView, View
 from django.contrib.auth.views import LoginView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, logout
 from base.models import Profile
 from base.forms import UserCreationForm
 from django.contrib import messages
+from django.shortcuts import redirect
 
 
 # ユーザー登録
@@ -28,6 +29,18 @@ class Login(LoginView):
     def form_invalid(self, form):
         messages.error(self.request, 'エラーでログインできません。')
         return super().form_invalid(form)
+    
+# ログアウト
+class Logout(View):
+    def get(self, request):
+        logout(request)
+        messages.success(request, 'ログアウトしました。')
+        return redirect('/')
+    
+    def post(self, request):
+        logout(request)
+        messages.success(request, 'ログアウトしました。')
+        return redirect('/')
  
 # ユーザー編集
 class AccountUpdateView(LoginRequiredMixin, UpdateView):
