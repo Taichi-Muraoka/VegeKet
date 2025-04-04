@@ -17,7 +17,22 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from base import views
-from django.contrib.auth.views import LogoutView
+# from django.contrib.auth.views import LogoutView
+
+# LogoutViewではpostメソッドが使えないため自作
+from django.views.generic import View
+from django.contrib.auth import logout
+from django.shortcuts import redirect
+
+# LogoutViewではpostメソッドが使えないため自作
+class CustomLogoutView(View):
+    def get(self, request):
+        logout(request)
+        return redirect('/')
+    
+    def post(self, request):
+        logout(request)
+        return redirect('/')
 
 urlpatterns = [
     # トップページ
@@ -35,7 +50,7 @@ urlpatterns = [
     path('login/', views.Login.as_view()),
 
     # ログアウト
-    path('logout/', LogoutView.as_view()),
+    path('logout/', CustomLogoutView.as_view()),
 
     # サインアップ
     path('signup/', views.SignUpView.as_view()),
