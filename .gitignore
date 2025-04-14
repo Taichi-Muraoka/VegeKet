@@ -1,4 +1,5 @@
-/secrets
+/secrets/.env.dev
+/secrets/.env.prod
 *.log
 *.pyc
 __pycache__/
