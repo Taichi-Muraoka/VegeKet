@@ -18,14 +18,29 @@ class PaySuccessView(LoginRequiredMixin, TemplateView):
     template_name = 'pages/success.html'
  
     def get(self, request, *args, **kwargs):
+        # checkout_sessionで処理された注文IDを取得
+        order_id = request.GET.get('order_id')
+
+        # 注文が見つからない場合はエラーメッセージを表示(複数ある場合も)
+        orders = Order.objects.filter(user=request.user,pk=order_id)
+        if len(orders) != 1:
+            messages.error(request, '注文が見つかりません。')
+            return super().get(request, *args, **kwargs)
+
         # 最新のOrderオブジェクトを取得し、注文確定に変更
-        order = Order.objects.filter(
-            user=request.user).order_by('-created_at')[0]
+        order = orders[0]
+
+        # すでに注文確定されている場合はエラーメッセージを表示
+        if order.is_confirmed:
+            messages.error(request, 'すでに注文確定されています。')
+            return super().get(request, *args, **kwargs)
+
         order.is_confirmed = True  # 注文確定
         order.save()
  
         # カート情報削除
-        del request.session['cart']
+        if 'cart' in request.session:
+            del request.session['cart']
  
         return super().get(request, *args, **kwargs)
  
@@ -34,20 +49,19 @@ class PayCancelView(LoginRequiredMixin, TemplateView):
     template_name = 'pages/cancel.html'
  
     def get(self, request, *args, **kwargs):
-        # 最新のOrderオブジェクトを取得
-        order = Order.objects.filter(
-            user=request.user).order_by('-created_at')[0]
+        # ログインユーザーの仮注文を取得
+        orders = Order.objects.filter(user=request.user,is_confirmed=False)
+
+        for order in orders:
+            # 在庫数と販売数を元の状態に戻す
+            for elem in json.loads(order.items):
+                item = Item.objects.get(pk=elem['pk'])
+                item.sold_count -= elem['quantity']
+                item.stock += elem['quantity']
+                item.save()
  
-        # 在庫数と販売数を元の状態に戻す
-        for elem in json.loads(order.items):
-            item = Item.objects.get(pk=elem['pk'])
-            item.sold_count -= elem['quantity']
-            item.stock += elem['quantity']
-            item.save()
- 
-        # is_confirmedがFalseであれば削除（仮オーダー削除）
-        if not order.is_confirmed:
-            order.delete()
+        # 仮注文を削除
+        orders.delete()
  
         return super().get(request, *args, **kwargs)
  
@@ -126,7 +140,7 @@ class PayWithStripe(LoginRequiredMixin, View):
             item.save()
  
         # 仮注文を作成（is_confirmed=Flase)
-        Order.objects.create(
+        order = Order.objects.create(
             user=request.user,
             uid=request.user.pk,
             items=json.dumps(items),
@@ -140,7 +154,7 @@ class PayWithStripe(LoginRequiredMixin, View):
             payment_method_types=['card'],
             line_items=line_items,
             mode='payment',
-            success_url=f'{settings.MY_URL}/pay/success/',
-            cancel_url=f'{settings.MY_URL}/pay/cancel/',
+            success_url=f'{settings.MY_URL}/pay/success/?order_id={order.pk}',
+            cancel_url=f'{settings.MY_URL}/pay/cancel/?order_id={order.pk}',
         )
         return redirect(checkout_session.url)
