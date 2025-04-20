@@ -83,3 +83,8 @@ http://localhost:8000
 http://localhost:8000/admin
 
 <img width="678" alt="image" src="https://github.com/user-attachments/assets/375ab4c1-dcfc-45a3-b2ae-026d364f018c" />
+
+## スーパーユーザー作成
+```
+python manage.py createsuperuser
+```
